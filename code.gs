@@ -237,7 +237,6 @@ function webGetPendingMovements() {
     const mySubordinateEmails = new Set(webGetAllSubordinateEmails(adminEmail));
     const moveSheet = getOrCreateSheet(ss, SHEET_NAMES.movementRequests);
     const data = moveSheet.getDataRange().getValues();
-    const data = moveSheet.getDataRange().getValues();
     const results = [];
 
     // Get headers
