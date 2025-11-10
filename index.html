@@ -2,7 +2,7 @@
 <html>
   <head>
     <base target="_top">
-    <title>Konecta Adherence Portal (KAP)</title>
+    <title>KOMPASS (Konecta Operations, Management & Personnel Self-Service)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Using Inter, a calm and highly legible font -->
@@ -246,7 +246,7 @@
       
       header h1 { 
         color: var(--text-color);
-        font-size: 1.5rem; /* Bigger */
+        font-size: 1.8rem; /* Bigger */
         font-weight: 800; /* Bolder */
         margin: 0;
         display: flex;
@@ -257,7 +257,7 @@
       .header-kap {
         color: var(--konecta-blue);
         font-weight: 500; /* Lighter than KAP */
-        font-size: 0.8rem; /* Smaller */
+        font-size: 0.9rem; /* Smaller */
         margin-left: 8px;
       }
       /* --- END Header Brand Styling --- */
@@ -377,7 +377,7 @@
 
       /* --- Centered Card Layout --- */
       main {
-        max-width: 1600px;
+        max-width: 1800px;
         margin: 30px auto 0 auto; 
         background-color: var(--card-bg);
         border-radius: var(--radius);
@@ -398,8 +398,8 @@
         background-color: var(--card-bg);
       }
       .tab-button {
-        padding: 14px 20px;
-        font-size: 15px;
+        padding: 14px 15px;
+        font-size: 14px;
         font-weight: 500;
         cursor: pointer;
         border: none;
@@ -1437,6 +1437,20 @@
           width: 100%;
         }
       }
+      /* --- FIX: Add padding to admin panels --- */
+        #registration-admin-panel,
+       #announcements-admin-panel {
+         padding: 40px;
+       }
+
+       /* Responsive fix for small screens */
+       @media (max-width: 900px) {
+         #registration-admin-panel,
+         #announcements-admin-panel {
+           padding: 20px;
+         }
+       }
+
     </style>
   </head>
   <body>
@@ -1448,23 +1462,20 @@
         <div class="logo-container">
           <img class="header-logo" src="https://konecta.com/images/konecta-share.jpg" alt="Konecta Logo">
         </div>
-        <h1>
-          KAP <span class="header-kap">Konecta Adherence Portal</span>
-        </h1>
+        <h1>KOMPASS <span class="header-kap">Konecta Operations, Management & Personnel Self-Service</span></h1>
       </div>
 
       <div class="header-controls">
         
         <div class="dark-mode-toggle-wrapper" title="Toggle Dark Mode">
-            <input type="checkbox" id="dark-mode-toggle">
-            <label for="dark-mode-toggle" class="switch-label">
-                <span class="sun-icon">⚫</span>
-                <span class="moon-icon">⚪</span>
-            </label>
-        </div>
+            </div>
         
         <button id="header-refresh-button" title="Refresh Data" onclick="refreshCurrentData()">
           <img id="refresh-icon" src="https://cdn-icons-png.flaticon.com/512/2725/2725164.png" alt="Refresh Icon">
+        </button>
+
+        <button id="header-role-request-button" title="Request Role Upgrade" onclick="showRoleRequestModal()" style="display: none; background: var(--input-bg); border: 1px solid var(--border-color); cursor: pointer; height: 34px; width: 34px; padding: 0; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
+          <img id="role-request-icon" src="https://cdn-icons-png.flaticon.com/512/1828/1828895.png" alt="Upgrade Icon" style="width: 20px; height: 20px;">
         </button>
       </div>
     </header>
@@ -1483,6 +1494,8 @@
         <button id="coaching-tab-button" class="tab-button" onclick="showTab('coaching')">Coaching</button>
         <button id="coaching-admin-tab-button" class="tab-button" onclick="showTab('coaching-admin')" style="display: none;">Coaching Admin</button>
         <button id="registration-admin-tab-button" class="tab-button" onclick="showTab('registration-admin')" style="display: none;">Registration Admin</button>
+        <button id="announcements-admin-tab-button" class="tab-button" onclick="showTab('announcements-admin')" style="display: none;">Announcements</button>
+
       </div>
 
       <div class="content-container">
@@ -1491,6 +1504,15 @@
         <!--      TAB 1: PUNCH PANEL            -->
         <!-- ================================== -->
         <div id="punch-panel" class="tab-panel">
+
+          <div id="announcement-banner-container" style="display: none; margin-bottom: 20px;">
+            <div id="announcement-banner" class="status-message processing" style="visibility: visible; opacity: 1; text-align: left; padding-right: 35px; position: relative; border-color: var(--status-pending-text);">
+              <strong style="display: block; margin-bottom: 5px; color: var(--status-pending-text);">Announcements</strong>
+              <div id="announcement-content-area"></div>
+              <button onclick="dismissAnnouncements()" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.5rem; color: var(--status-pending-text); cursor: pointer; padding: 0; margin: 0; line-height: 1;">&times;</button>
+            </div>
+          </div>
+
           <div id="agent-info">Loading user info...</div> 
           <div id="admin-panel"><label for="agent-select">Punch For:</label><select id="agent-select"></select></div>
           <div id="buttons">
@@ -1512,7 +1534,7 @@
         <!--      TAB 2: MY SCHEDULE PANEL      -->
         <!-- ================================== -->
         <div id="my-schedule-panel" class="tab-panel">
-          <h2>My Upcoming Schedule</h2>
+          <h2 id="my-schedule-title">My Upcoming Schedule</h2>
           <p>Your schedule for the next 7 days.</p>
           <div id="my-schedule-status" class="status-message"></div>
           <div id="my-schedule-display"></div>
@@ -1528,24 +1550,6 @@
             <div class="balance-item"><p>Sick</p><span class="balance-days" id="balance-sick">--</span></div>
             <div class="balance-item"><p>Casual</p><span class="balance-days" id="balance-casual">--</span></div>
           </div>
-          <hr class="section-divider">
-          <form id="admin-request-form" class="form-container">
-            <h2>Request Role Upgrade</h2>
-            <p class="text-color-secondary">If your supervisor is a 'Superadmin', you can request 'Admin' access. If you are an 'Admin', you can request 'Superadmin' access. Requests will be reviewed by the system owner.</p>
-            <div class="form-group">
-              <label for="admin-request-role">Role to Request</label>
-              <select id="admin-request-role">
-                <option value="admin">Admin</option>
-                <option value="superadmin">Superadmin</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="admin-request-justification">Justification</label>
-              <textarea id="admin-request-justification" rows="3" placeholder="Please explain why you need this role upgrade." required></textarea>
-            </div>
-            <button type="button" class="view-btn" style="background-color:var(--konecta-dark)" onclick="submitAdminRequest()">Submit Role Request</button>
-          </form>
-          <div id="admin-request-status" class="status-message"></div>
           <hr class="section-divider">
 
           <form id="leave-form" class="form-container">
@@ -1763,9 +1767,21 @@
         <!--    NEW TAB 9: REPORTING LINE       -->
         <!-- ================================== -->
         <div id="reporting-line-panel" class="tab-panel">
+
+          <div id="pending-movements-section">
+            <h2>Pending Reporting Line Approvals</h2>
+            <p class="text-color-secondary">This section shows requests for you to approve, or requests pending for admins who report to you.</p>
+            <div id="movement-approval-status" class="status-message"></div>
+            <div id="pending-movements-list" class="request-list">
+              <p class="text-color-secondary">Loading pending approvals...</p>
+            </div>
+          </div>
+          
+          <hr class="section-divider">
+
           <form id="reporting-line-form" class="form-container">
-            <h2>Update User Reporting Line</h2>
-            <p class="text-color-secondary">Select a user and assign them to a new supervisor. This action is typically only possible if you are a Superadmin, or if the user and new supervisor are both under your management.</p>
+            <h2>Submit New Movement Request</h2>
+            <p class="text-color-secondary">Select a user and their new supervisor. This will send a request to the new supervisor for approval.</p>
             
             <div class="form-group">
               <label for="reporting-line-user">Select User to Move</label>
@@ -1777,9 +1793,29 @@
               <select id="reporting-line-supervisor" required></select>
             </div>
             
-            <button type="button" onclick="submitReportingLineChange()" style="background-color:var(--konecta-dark)">Update Reporting Line</button>
+            <button type="button" onclick="submitMovementRequest()" style="background-color:var(--konecta-dark)">Submit Movement Request</button>
           </form>
-          <div id="reporting-line-status" class="status-message"></div>
+          <div id="movement-request-status" class="status-message"></div>
+
+          <hr class="section-divider">
+
+          <div id="movement-history-section">
+            <h2>User Movement History</h2>
+            <p classs="text-color-secondary">Select one of your subordinates to view their complete movement history.</p>
+            <form id="movement-history-form" class="form-container" style="background-color: var(--input-bg); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 20px; display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end;">
+              <div class="form-group" style="flex: 2; min-width: 200px; margin-bottom: 0;">
+                <label for="movement-history-user">Select User</label>
+                <select id="movement-history-user">
+                  </select>
+              </div>
+              <button type="button" class="view-btn" onclick="loadMovementHistory()" style="margin: 0; background-color:var(--konecta-dark)">Load History</button>
+            </form>
+            <div id="movement-history-status" class="status-message"></div>
+            <div id="movement-history-list" class="request-list" style="margin-top: 20px;">
+              <p class="text-color-secondary">Select a user to view their movement history.</p>
+            </div>
+          </div>
+
         </div>
 
         <!-- ================================== -->
@@ -1887,12 +1923,43 @@
             </div>
         </div>
         </div>
+        
+        <div id="announcements-admin-panel" class="tab-panel">
+          <h2>Manage Announcements</h2>
+          <p class="text-color-secondary">Create, edit, or delete announcements that appear on the Punch Clock.</p>
+
+          <form id="announcement-form" class="form-container">
+            <input type="hidden" id="announcement-id" value="">
+            <div class="form-group">
+              <label for="announcement-content">Announcement Content</label>
+              <textarea id="announcement-content" rows="3" placeholder="Enter announcement text..."></textarea>
+            </div>
+            <div class="form-group">
+              <label for="announcement-status">Status</label>
+              <select id="announcement-status">
+                <option value="Active">Active (Show to users)</option>
+                <option value="Archived">Archived (Hide from users)</option>
+              </select>
+            </div>
+            <button type="button" class="submit-btn-green" onclick="saveAnnouncement()">Save Announcement</button>
+            <button type="button" class="view-btn" style="background-color:var(--text-color-secondary)" onclick="clearAnnouncementForm()">Clear Form</button>
+          </form>
+          <div id="announcement-admin-status" class="status-message"></div>
+
+          <hr class="section-divider">
+
+          <h3>Existing Announcements</h3>
+          <div id="announcement-admin-list" class="request-list">
+            <p class="text-color-secondary">Loading announcements...</p>
+          </div>
+        </div>
+        
       
     </main> <!-- End .card -->
 
     <!-- MODIFIED: Footer is now positioned by CSS/Flexbox -->
     <footer>
-      <p>Konecta Adherence Portal - Created by Fady Bekhet</p>
+      <p>KOMPASS (Konecta Operations, Management & Personnel Self-Service) - Created by Fady Bekhet</p>
     </footer>
 
 
@@ -1940,7 +2007,7 @@
           if (toggleInput) toggleInput.checked = true; // Set checkbox state
           
           // Invert the refresh icon
-          document.querySelectorAll('#header-refresh-button img').forEach(img => {
+          document.querySelectorAll('#header-refresh-button img, #header-role-request-button img').forEach(img => {
                img.style.filter = 'invert(100%)';
           });
           
@@ -1950,7 +2017,7 @@
           if (toggleInput) toggleInput.checked = false; // Set checkbox state
 
           // Reset the refresh icon filter
-          document.querySelectorAll('#header-refresh-button img').forEach(img => {
+          document.querySelectorAll('#header-refresh-button img, #header-role-request-button img').forEach(img => {
                img.style.filter = 'none';
           });
         }
@@ -2047,7 +2114,17 @@
         // *** ADD THIS ELSE IF BLOCK ***
         } else if (tabName === 'registration-admin') {
           loadRegistrationAdmin();
-        }
+        
+        // *** ADD THIS ELSE IF BLOCK ***
+        } else if (tabName === 'reporting-line') {
+          loadPendingMovements();
+          // Clear history list when tab is clicked
+          document.getElementById('movement-history-list').innerHTML = '<p class="text-color-secondary">Select a user to view their movement history.</p>';
+        // *** ADD THIS ELSE IF BLOCK ***
+        } else if (tabName === 'announcements-admin') {
+          loadAnnouncements_Admin();
+  }
+        
       }
       
       // --- Refresh User Info ---
@@ -2141,6 +2218,7 @@
         document.getElementById('buttons').style.display = 'block';
         document.getElementById('other-buttons').style.display = 'block';
         document.getElementById('my-schedule-tab-button').style.display = 'inline-block';
+        document.getElementById('header-role-request-button').style.display = 'flex';
         
         if (user.myBalances) populateMyBalances(user.myBalances);
 
@@ -2173,6 +2251,7 @@
           
           populateAdminDropdown(allUsersList, selfUserName, 'reporting-line-user', 'Select a user');
           populateSupervisorDropdown(allAdminsList, 'reporting-line-supervisor');
+          populateAdminDropdown(allUsersList, selfUserName, 'movement-history-user', 'Select your subordinate...');
           
           populateAdminDropdown(allUsersList, selfUserName, 'coaching-agent-select', 'Select an agent');
           
@@ -2195,9 +2274,15 @@
             lrUserSelect.value = 'ALL_SUBORDINATES'; // Default
           }
 
-          if (user.role === 'superadmin') {
-             // *** NEW: Show Registration Admin tab ONLY for superadmin ***
+          if (user.role === 'admin' || user.role === 'superadmin') {
+             // *** MODIFIED: Show Registration Admin tab for admin and superadmin ***
              document.getElementById('registration-admin-tab-button').style.display = 'inline-block';
+          }
+          document.getElementById('my-schedule-title').innerText = "My Team's Upcoming Schedule";
+
+          if (user.role === 'superadmin') {
+             // *** MOVED: Announcements tab is still superadmin only ***
+             document.getElementById('announcements-admin-tab-button').style.display = 'inline-block';
           }
           
         } else {
@@ -2208,6 +2293,7 @@
 
           document.getElementById('coaching-form-container').style.display = 'none';
           document.getElementById('coaching-list-container').querySelector('h2').innerText = 'My Coaching History';
+          
         }
         
         // Show coaching tab for everyone
@@ -2234,6 +2320,7 @@
           .withSuccessHandler(user => { 
             clearTimeout(loadTimeout); 
             populateUserInfo(user);
+            loadAnnouncements(); // Load banner for all users on page load
             document.getElementById('app-loader').style.display = 'none';
           })
           .withFailureHandler(err => {
@@ -2652,8 +2739,10 @@
               if (msg.startsWith('Error:')) {
                 setStatus('admin-request-status', 'error', msg.replace('Error: ', ''));
               } else {
+                // Show success message, reset form, and close modal after 2 seconds
                 setStatus('admin-request-status', 'success', msg);
                 document.getElementById('admin-request-form').reset();
+                setTimeout(hideRoleRequestModal, 2000); 
               }
             })
             .withFailureHandler(err => {
@@ -2813,6 +2902,7 @@
           <table class="schedule-table">
             <thead>
               <tr>
+                <th>User</th>
                 <th>Date</th>
                 <th>Day</th>
                 <th>Status</th>
@@ -2847,6 +2937,7 @@
 
           html += `
             <tr class="${trClass}">
+              <td><strong>${day.userName}</strong></td>
               <td>${dateStr}</td>
               <td>${dayStr}</td>
               <td class="${statusClass}">${day.leaveType}</td>
@@ -3800,8 +3891,8 @@
           .webGetMyTeam();
       }
 
-      // --- Submit Reporting Line Change ---
-      function submitReportingLineChange() {
+     // --- Submit Movement Request (MODIFIED) ---
+      function submitMovementRequest() {
         try {
           const userEmail = document.getElementById('reporting-line-user').value;
           const newSupervisorEmail = document.getElementById('reporting-line-supervisor').value;
@@ -3810,25 +3901,149 @@
           if (!newSupervisorEmail) throw new Error("Please select a new supervisor.");
           if (userEmail === newSupervisorEmail) throw new Error("A user cannot be their own supervisor.");
 
-          setStatus('reporting-line-status', 'processing', 'Processing reporting line change...');
+          setStatus('movement-request-status', 'processing', 'Submitting movement request...');
 
           google.script.run
             .withSuccessHandler(msg => {
               if (msg.startsWith('Error:')) {
-                setStatus('reporting-line-status', 'error', msg.replace('Error: ', ''));
+                setStatus('movement-request-status', 'error', msg.replace('Error: ', ''));
               } else {
-                setStatus('reporting-line-status', 'success', msg);
+                setStatus('movement-request-status', 'success', msg);
                 document.getElementById('reporting-line-form').reset();
+                // Also refresh pending list, as the new request might appear
+                loadPendingMovements();
               }
             })
             .withFailureHandler(err => {
-              setStatus('reporting-line-status', 'error', err.message);
+              setStatus('movement-request-status', 'error', err.message);
             })
-            .webUpdateReportingLine(userEmail, newSupervisorEmail);
+            .webSubmitMovementRequest(userEmail, newSupervisorEmail); // <-- MODIFIED Function Name
 
         } catch (err) {
-          setStatus('reporting-line-status', 'error', err.message);
+          setStatus('movement-request-status', 'error', err.message);
         }
+      }
+
+      // --- NEW: Load Pending Movements ---
+      function loadPendingMovements() {
+        const listDiv = document.getElementById('pending-movements-list');
+        listDiv.innerHTML = '<p class="text-color-secondary">Loading pending approvals...</p>';
+        setStatus('movement-approval-status', '', ''); // Clear status
+
+        google.script.run
+          .withSuccessHandler(requests => {
+            if (requests.error) {
+              listDiv.innerHTML = `<p class="status-message error visible">${requests.error}</p>`;
+              return;
+            }
+            if (requests.length === 0) {
+              listDiv.innerHTML = '<p class="text-color-secondary">No pending approvals found.</p>';
+              return;
+            }
+
+            let html = '';
+            requests.forEach(req => {
+              html += `
+                <div class="request-list-item">
+                  <div class="item-details">
+                    <h4>Move: ${req.userToMoveName}</h4>
+                    <p><strong>From:</strong> ${req.fromSupervisorName}</p>
+                    <p><strong>To:</strong> ${req.toSupervisorName}</p>
+                    <p class="text-color-secondary" style="font-size: 0.85rem;">Requested by ${req.requestedByName} on ${formatDate(req.requestedDate)}</p>
+                  </div>
+                  <div class="item-actions">
+                    <button class="approve-btn" onclick="handleMovementApproval('${req.movementID}', 'Approved')">Approve</button>
+                    <button class="deny-btn" onclick="handleMovementApproval('${req.movementID}', 'Denied')">Deny</button>
+                  </div>
+                </div>
+              `;
+            });
+            listDiv.innerHTML = html;
+          })
+          .withFailureHandler(err => {
+            listDiv.innerHTML = `<p class="status-message error visible">Error loading approvals: ${err.message}</p>`;
+          })
+          .webGetPendingMovements();
+      }
+
+      // --- NEW: Handle Movement Approval ---
+      function handleMovementApproval(movementID, newStatus) {
+        setStatus('movement-approval-status', 'processing', 'Processing request...');
+
+        google.script.run
+          .withSuccessHandler(result => {
+            if (result.error) {
+              setStatus('movement-approval-status', 'error', result.error);
+            } else {
+              setStatus('movement-approval-status', 'success', result.message);
+              loadPendingMovements(); // Refresh the list
+            }
+          })
+          .withFailureHandler(err => {
+            setStatus('movement-approval-status', 'error', err.message);
+          })
+          .webApproveDenyMovement(movementID, newStatus);
+      }
+
+      // --- NEW: Load Movement History ---
+      function loadMovementHistory() {
+        const listDiv = document.getElementById('movement-history-list');
+        const userEmail = document.getElementById('movement-history-user').value;
+        
+        if (!userEmail) {
+          setStatus('movement-history-status', 'error', 'Please select a user to view their history.');
+          return;
+        }
+
+        listDiv.innerHTML = '<p class="text-color-secondary">Loading history...</p>';
+        setStatus('movement-history-status', 'processing', 'Loading history...');
+
+        google.script.run
+          .withSuccessHandler(history => {
+            if (history.error) {
+              setStatus('movement-history-status', 'error', history.error);
+              listDiv.innerHTML = '';
+              return;
+            }
+            if (history.length === 0) {
+              setStatus('movement-history-status', 'success', 'No movement history found for this user.');
+              listDiv.innerHTML = '';
+              return;
+            }
+
+            let html = '';
+            history.forEach(item => {
+              let statusClass = '';
+              if (item.status === 'Pending') statusClass = 'status-pending';
+              if (item.status === 'Approved') statusClass = 'status-approved';
+              if (item.status === 'Denied') statusClass = 'status-denied';
+
+              html += `
+                <div class="request-list-item">
+                  <div class="item-details">
+                    <p><strong>From:</strong> ${item.fromSupervisorName}</p>
+                    <p><strong>To:</strong> ${item.toSupervisorName}</p>
+                    <p class="text-color-secondary">Requested: ${formatDate(item.requestDate)} by ${item.requestedByName}</p>
+                    ${item.status !== 'Pending' ? `
+                      <p class="text-color-secondary" style="font-size: 0.9rem;">
+                        <strong>Action:</strong> ${formatDate(item.actionDate)} by ${item.actionByName}
+                      </p>
+                    ` : ''}
+                  </div>
+                  <div class="item-actions">
+                    <span class="status-badge ${statusClass}">${item.status}</span>
+                  </div>
+                </div>
+              `;
+            });
+            listDiv.innerHTML = html;
+            setStatus('movement-history-status', 'success', `Loaded ${history.length} records.`);
+          })
+          .withFailureHandler(err => {
+            setStatus('movement-history-status', 'error', err.message);
+            listDiv.innerHTML = '';
+          })
+          .webGetMovementHistory(userEmail);
       }
 
       // --- NEW: Coaching Functions ---
@@ -3985,10 +4200,11 @@
         
         sessions.forEach(session => {
           let scoreDisplay = 'N/A';
+          
           if (session.overallScore) {
              scoreDisplay = `${parseFloat(session.overallScore).toFixed(2)}%`;
           }
-          
+          let ackHtml = '';
           let fuDate = session.followUpDate ? formatDate(session.followUpDate) : 'N/A';
           let fuStatus = session.followUpStatus || '';
           let fuHtml = '';
@@ -4001,6 +4217,18 @@
           } else if (fuStatus) { // e.g., "Postponed"
             fuHtml = `<p><strong>Follow-up:</strong> <span class="status-badge status-processing" style="margin-top:0;">${fuStatus} (${fuDate})</span></p>`;
           }
+
+
+          if (session.agentAcknowledgementTimestamp) {
+            ackHtml = `<span class="status-badge status-approved" style="margin-left: 10px; font-size: 0.75rem; padding: 4px 8px;">Acknowledged</span>`;
+          }
+
+          html += `
+            <div class="request-list-item">
+              <div class="item-details">
+                {/* *** ADD ${ackHtml} HERE *** */}
+                <h4>${session.agentName} - ${formatDate(session.sessionDate)} (${session.weekNumber}) ${ackHtml}</h4>
+                <p><strong>Coach:</strong> ${session.coachName}</p>
           // ********************************************
 
           html += `
@@ -4824,6 +5052,181 @@
       }
       // *** END: CUSTOM CONFIRM MODAL FUNCTIONS ***
 
+      // *** ADD THESE FUNCTIONS ***
+      function showRoleRequestModal() {
+        // Reset form status
+        setStatus('admin-request-status', '', '');
+        document.getElementById('admin-request-form').reset();
+        document.getElementById('role-request-modal-backdrop').style.display = 'block';
+        document.getElementById('role-request-modal').style.display = 'flex';
+      }
+
+      function hideRoleRequestModal() {
+        document.getElementById('role-request-modal-backdrop').style.display = 'none';
+        document.getElementById('role-request-modal').style.display = 'none';
+      }
+
+
+
+      // ===================================
+      // === ANNOUNCEMENTS MODULE (JS) ===
+      // ===================================
+
+// For users to see the banner
+function loadAnnouncements() {
+  google.script.run
+    .withSuccessHandler(renderAnnouncementsBanner)
+    .withFailureHandler(err => console.error("Failed to load announcements:", err))
+    .webGetAnnouncements();
+}
+
+function renderAnnouncementsBanner(announcements) {
+  const container = document.getElementById('announcement-banner-container');
+  const contentArea = document.getElementById('announcement-content-area');
+  
+  if (announcements && announcements.length > 0) {
+    // We removed the sessionStorage check here.
+    
+    // Using <pre> preserves line breaks from the textarea
+    let html = announcements.map(a => 
+      `<pre style="font-family: 'Inter', Arial, sans-serif; margin: 0 0 10px 0; white-space: pre-wrap;">- ${a.content}</pre>`
+    ).join('');
+    
+    contentArea.innerHTML = html;
+    container.style.display = 'block'; // Always show it if announcements exist
+  } else {
+    container.style.display = 'none';
+  }
+}
+
+function dismissAnnouncements() {
+  document.getElementById('announcement-banner-container').style.display = 'none';
+  // We no longer set sessionStorage, so it will reappear on refresh
+}
+
+// For superadmins to manage them
+function loadAnnouncements_Admin() {
+  setStatus('announcement-admin-status', 'processing', 'Loading announcements...');
+  google.script.run
+    .withSuccessHandler(renderAnnouncementsAdmin)
+    .withFailureHandler(err => setStatus('announcement-admin-status', 'error', err.message))
+    .webGetAnnouncements_Admin();
+}
+
+function renderAnnouncementsAdmin(announcements) {
+  const listDiv = document.getElementById('announcement-admin-list');
+  if (announcements.error) {
+    setStatus('announcement-admin-status', 'error', announcements.error);
+    listDiv.innerHTML = '';
+    return;
+  }
+
+  if (!announcements || announcements.length === 0) {
+    listDiv.innerHTML = '<p class="text-color-secondary">No announcements found.</p>';
+    setStatus('announcement-admin-status', '', '');
+    return;
+  }
+
+  let html = '';
+  // Sort by timestamp, newest first
+  announcements.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+  announcements.forEach(a => {
+    const statusClass = a.status === 'Active' ? 'status-approved' : 'status-pending';
+    // Escape content for safe insertion into an HTML onclick attribute
+    const escapedContent = a.content.replace(/'/g, "\\'").replace(/"/g, "&quot;").replace(/\r\n|\r|\n/g, '\\n');
+
+    html += `
+      <div class="request-list-item">
+        <div class="item-details">
+          <pre style="font-family: 'Inter', Arial, sans-serif; margin: 0; white-space: pre-wrap;">${a.content}</pre>
+          <small class="text-color-secondary">By: ${a.createdBy} on ${formatDate(a.timestamp)}</small>
+        </div>
+        <div class="item-actions" style="display: flex; flex-direction: column; gap: 5px; align-items: flex-end; min-width: 120px;">
+          <span class="status-badge ${statusClass}">${a.status}</span>
+          <div style="margin-top: 5px;">
+            <button class="view-btn" style="background-color: var(--konecta-blue); padding: 5px 10px; font-size: 0.9rem; margin: 0 5px;" onclick="editAnnouncement('${a.id}', '${escapedContent}', '${a.status}')">Edit</button>
+            <button class="deny-btn" style="padding: 5px 10px; font-size: 0.9rem; margin: 0;" onclick="deleteAnnouncement('${a.id}')">Delete</button>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  listDiv.innerHTML = html;
+  setStatus('announcement-admin-status', '', '');
+}
+
+function clearAnnouncementForm() {
+  document.getElementById('announcement-id').value = '';
+  document.getElementById('announcement-content').value = '';
+  document.getElementById('announcement-status').value = 'Active';
+  setStatus('announcement-admin-status', '', '');
+}
+
+function editAnnouncement(id, content, status) {
+  document.getElementById('announcement-id').value = id;
+  // Handle escaped quotes and newlines from the onclick string
+  const unescapedContent = content.replace(/&quot;/g, '"').replace(/\\n/g, '\n');
+  document.getElementById('announcement-content').value = unescapedContent;
+  document.getElementById('announcement-status').value = status;
+
+  // Scroll to the top of the main container to show the form
+  document.querySelector('main').scrollTo(0, 0); 
+}
+
+function saveAnnouncement() {
+  const announcement = {
+    id: document.getElementById('announcement-id').value || null,
+    content: document.getElementById('announcement-content').value,
+    status: document.getElementById('announcement-status').value
+  };
+
+  if (!announcement.content || announcement.content.trim() === "") {
+    setStatus('announcement-admin-status', 'error', 'Content cannot be empty.');
+    return;
+  }
+
+  setStatus('announcement-admin-status', 'processing', 'Saving...');
+
+  google.script.run
+    .withSuccessHandler(result => {
+      if (result.error) {
+        setStatus('announcement-admin-status', 'error', result.error);
+      } else {
+        setStatus('announcement-admin-status', 'success', 'Announcement saved!');
+        clearAnnouncementForm();
+        loadAnnouncements_Admin(); // Refresh admin list
+        loadAnnouncements(); // Refresh user banner
+      }
+    })
+    .withFailureHandler(err => setStatus('announcement-admin-status', 'error', err.message))
+    .webSaveAnnouncement(announcement);
+}
+
+function deleteAnnouncement(id) {
+  // Use the existing custom confirm modal
+  showCustomConfirm(
+    'Are you sure you want to permanently delete this announcement?',
+    'Delete',
+    'deny-btn',
+    () => { // This is the onConfirm callback
+      setStatus('announcement-admin-status', 'processing', 'Deleting...');
+      google.script.run
+        .withSuccessHandler(result => {
+          if (result.error) {
+            setStatus('announcement-admin-status', 'error', result.error);
+          } else {
+            setStatus('announcement-admin-status', 'success', 'Announcement deleted.');
+            loadAnnouncements_Admin(); // Refresh admin list
+            loadAnnouncements(); // Refresh user banner
+          }
+        })
+        .withFailureHandler(err => setStatus('announcement-admin-status', 'error', err.message))
+        .webDeleteAnnouncement(id);
+    }
+  );
+}
+
       // Initialize
       document.addEventListener("DOMContentLoaded", function() {
         loadUserInfo(); 
@@ -4906,5 +5309,35 @@
       </div>
     </div>
 
+    <div id="role-request-modal-backdrop" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 299;"></div>
+    <div id="role-request-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 500px; background-color: var(--card-bg); border-radius: var(--radius); z-index: 300; box-shadow: var(--shadow); overflow: hidden; flex-direction: column;">
+      
+      <div style="padding: 20px 20px 15px 20px; border-bottom: 1px solid var(--border-color);">
+        <h2 style="margin: 0; font-size: 1.25rem; color: var(--konecta-blue);">Request Role Upgrade</h2>
+      </div>
+      
+      <div id="role-request-modal-body" style="padding: 20px; flex-grow: 1;">
+        <form id="admin-request-form" class="form-container" style="padding: 0; box-shadow: none; border: none; background: none;">
+          <p class="text-color-secondary">If your supervisor is a 'Superadmin', you can request 'Admin' access. If you are an 'Admin', you can request 'Superadmin' access. Requests will be reviewed by the system owner.</p>
+          <div class="form-group">
+            <label for="admin-request-role">Role to Request</label>
+            <select id="admin-request-role">
+              <option value="admin">Admin</option>
+              <option value="superadmin">Superadmin</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="admin-request-justification">Justification</label>
+            <textarea id="admin-request-justification" rows="3" placeholder="Please explain why you need this role upgrade." required></textarea>
+          </div>
+          <button type="button" class="view-btn" style="background-color:var(--konecta-dark); width: 100%; margin: 0;" onclick="submitAdminRequest()">Submit Role Request</button>
+        </form>
+        <div id="admin-request-status" class="status-message" style="margin-top: 15px;"></div>
+      </div>
+
+      <div style="padding: 15px 20px; border-top: 1px solid var(--border-color); background-color: var(--input-bg); text-align: right;">
+        <button type="button" class="view-btn" style="background-color: var(--text-color-secondary);" onclick="hideRoleRequestModal()">Close</button>
+      </div>
+    </div>
     </body>
 </html>
