@@ -1550,7 +1550,6 @@
             <div class="balance-item"><p>Sick</p><span class="balance-days" id="balance-sick">--</span></div>
             <div class="balance-item"><p>Casual</p><span class="balance-days" id="balance-casual">--</span></div>
           </div>
-          <hr class="section-divider">
 
           <form id="leave-form" class="form-container">
             <h2>Submit Leave Request</h2>
@@ -4223,18 +4222,16 @@
             ackHtml = `<span class="status-badge status-approved" style="margin-left: 10px; font-size: 0.75rem; padding: 4px 8px;">Acknowledged</span>`;
           }
 
-          html += `
-            <div class="request-list-item">
-              <div class="item-details">
-                {/* *** ADD ${ackHtml} HERE *** */}
-                <h4>${session.agentName} - ${formatDate(session.sessionDate)} (${session.weekNumber}) ${ackHtml}</h4>
-                <p><strong>Coach:</strong> ${session.coachName}</p>
-          // ********************************************
+          // *** THIS IS THE CORRECTED LOGIC FOR THE BADGE ***
+          let ackHtml = '';
+          if (session.agentAcknowledgementTimestamp) {
+            ackHtml = `<span class="status-badge status-approved" style="margin-left: 10px; font-size: 0.75rem; padding: 4px 8px;">Acknowledged</span>`;
+          }
 
           html += `
             <div class="request-list-item">
               <div class="item-details">
-                <h4>${session.agentName} - ${formatDate(session.sessionDate)} (${session.weekNumber})</h4>
+                <h4>${session.agentName} - ${formatDate(session.sessionDate)} (${session.weekNumber}) ${ackHtml}</h4>
                 <p><strong>Coach:</strong> ${session.coachName}</p>
                 <p><strong>Overall Score:</strong> <strong style="color:var(--konecta-dark);">${scoreDisplay}</strong></p>
                 ${session.followUpComment ?
