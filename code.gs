@@ -1160,12 +1160,12 @@ function getUserInfo() {
 let hasPendingRoleRequests = false;
 if (role === 'superadmin') {
   const reqSheet = getOrCreateSheet(ss, SHEET_NAMES.roleRequests);
-  const data = reqSheet.getDataRange().getValues();
+const data = reqSheet.getDataRange().getValues();
   const statusIndex = data[0].indexOf("Status");
   for (let i = 1; i < data.length; i++) {
     if (data[i][statusIndex] === 'Pending') {
       hasPendingRoleRequests = true;
-      break;
+break;
     }
   }
 }
@@ -1179,9 +1179,10 @@ if (role === 'superadmin') {
       allAdmins: allAdmins,
       myBalances: myBalances,
       isNewUser: isNewUser, // This flag is still useful
-      accountStatus: accountStatus // *** NEW: Send status to frontend ***
+      accountStatus: accountStatus, // *** NEW: Send status to frontend ***
+      hasPendingRoleRequests: hasPendingRoleRequests // *** ADD THIS LINE ***
     };
-  } catch (e) {
+} catch (e) {
     throw new Error("Failed in getUserInfo: " + e.message);
   }
 }
